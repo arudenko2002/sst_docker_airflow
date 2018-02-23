@@ -1,0 +1,117 @@
+version: '2'
+services:
+    redis:
+        image: 'redis:3.2.7'
+
+
+
+    webserver:
+        image: sstumgdocker/docker-airflow-cloudsql:1.8.1-custom
+        restart: always
+        depends_on:
+            - redis
+        environment:
+            - LOAD_EX=n
+            - FERNET_KEY=46BKJoQYlPPOexq0OhDZnIlNepKFf87WFwLbfzqDDho=
+            - EXECUTOR=Celery
+            - PROJECT_NAME=umg-dev
+            - IS_CLOUD_SQL=Y
+            - IS_MYSQL=Y
+            - CLOUD_SQL_INSTANCE_PORT=3306
+            - CLOUD_SQL_INSTANCE_NAME=umg-dev:us-central1:umg-swift-cloud-sql
+            - MYSQL_HOST=127.0.0.1
+            - MYSQL_PORT=3306
+            - MYSQL_USER=root
+            - MYSQL_PASSWORD=pass@word1
+            - MYSQL_DB=swift_airflow
+            - IS_EMAIL=Y
+            - SMTP_HOST=smtphost.global.umusic.net
+            - SMTP_IP=10.254.143.230
+            - SMTP_PORT=25
+            - SMTP_MAIL_FROM=noreply@swift-airflow.umusic.net
+        volumes:
+            - /opt/airflow:/usr/local/airflow
+            - /opt/app:/opt/app
+
+        ports:
+            - "8888:8080"
+        command: webserver
+
+    flower:
+        image: sstumgdocker/docker-airflow-cloudsql:1.8.1-custom
+        restart: always
+        depends_on:
+            - redis
+        environment:
+            - EXECUTOR=Celery
+            - IS_CLOUD_SQL=Y
+            - IS_MYSQL=Y
+            - CLOUD_SQL_INSTANCE_PORT=3306
+            - CLOUD_SQL_INSTANCE_NAME=umg-dev:us-central1:umg-swift-cloud-sql
+            - MYSQL_HOST=127.0.0.1
+            - MYSQL_PORT=3306
+            - MYSQL_USER=root
+            - MYSQL_PASSWORD=pass@word1
+            - MYSQL_DB=swift_airflow
+        ports:
+            - "5555:5555"
+        command: flower
+
+    scheduler:
+        image: sstumgdocker/docker-airflow-cloudsql:1.8.1-custom
+        restart: always
+        depends_on:
+            - webserver
+        volumes:
+            - /opt/airflow:/usr/local/airflow
+            - /opt/app:/opt/app
+
+        environment:
+            - LOAD_EX=n
+            - FERNET_KEY=46BKJoQYlPPOexq0OhDZnIlNepKFf87WFwLbfzqDDho=
+            - EXECUTOR=Celery
+            - PROJECT_NAME=umg-dev
+            - IS_CLOUD_SQL=Y
+            - IS_MYSQL=Y
+            - CLOUD_SQL_INSTANCE_PORT=3306
+            - CLOUD_SQL_INSTANCE_NAME=umg-dev:us-central1:umg-swift-cloud-sql
+            - MYSQL_HOST=127.0.0.1
+            - MYSQL_PORT=3306
+            - MYSQL_USER=root
+            - MYSQL_PASSWORD=pass@word1
+            - MYSQL_DB=swift_airflow
+            - IS_EMAIL=Y
+            - SMTP_HOST=smtphost.global.umusic.net
+            - SMTP_IP=10.254.143.230
+            - SMTP_PORT=25
+            - SMTP_MAIL_FROM=noreply@swift-airflow.umusic.net
+        command: scheduler
+
+    worker:
+        image: sstumgdocker/docker-airflow-cloudsql:1.8.1-custom
+        restart: always
+        depends_on:
+            - scheduler
+        volumes:
+            - /opt/airflow:/usr/local/airflow
+            - /opt/app:/opt/app
+
+        environment:
+            - FERNET_KEY=46BKJoQYlPPOexq0OhDZnIlNepKFf87WFwLbfzqDDho=
+            - EXECUTOR=Celery
+            - PROJECT_NAME=umg-dev
+            - IS_CLOUD_SQL=Y
+            - IS_MYSQL=Y
+            - CLOUD_SQL_INSTANCE_PORT=3306
+            - CLOUD_SQL_INSTANCE_NAME=umg-dev:us-central1:umg-swift-cloud-sql
+            - MYSQL_HOST=127.0.0.1
+            - MYSQL_PORT=3306
+            - MYSQL_USER=root
+            - MYSQL_PASSWORD=pass@word1
+            - MYSQL_DB=swift_airflow
+            - IS_EMAIL=Y
+            - SMTP_HOST=smtphost.global.umusic.net
+            - SMTP_IP=10.254.143.230
+            - SMTP_PORT=25
+            - SMTP_MAIL_FROM=noreply@swift-airflow.umusic.net
+        command: worker
